@@ -11,7 +11,7 @@ import {
   Pressable,
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
-import { Swipeable } from "react-native-gesture-handler";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 export default function App() {
@@ -50,7 +50,6 @@ export default function App() {
   };
 
   const handleComplete = (item) => {
-    console.log("sdf");
     const updatedTodos = todos.map((ele) => {
       if (item.id === ele.id) {
         return { ...ele, isComplete: true };
@@ -63,45 +62,15 @@ export default function App() {
     console.log("todos", todos);
   };
 
-  const renderRightActions = (progress, dragX, item) => {
-    const trans = dragX.interpolate({
-      inputRange: [0, 50, 100],
-      outputRange: [0, 0.5, 1],
-    });
-    // return editTodo(item.id, item.text);
-    return (
-      <Pressable
-        style={{
-          justifyContent: "center",
-          alignItems: "flex-end",
-          paddingHorizontal: 10,
-        }}
-        onPress={() => editTodo(item.id, item.text)}
-      >
-        <Icon name="create-outline" size={20} color="#4CAF50" />
-      </Pressable>
-    );
-  };
-  const renderLeftActions = (progress, dragX, item) => {
-    const trans = dragX.interpolate({
-      inputRange: [0, 50, 100],
-      outputRange: [0.8, 0.5, 1],
-    });
-
-    return (
-      <Pressable
-        style={{
-          justifyContent: "center",
-          alignItems: "flex-start",
-          paddingHorizontal: 20,
-        }}
-        onPress={() => deleteTodo(item.id)}
-      >
-        <Icon name="trash-outline" size={20} color="#FF0000" />
-      </Pressable>
-    );
-  };
-
+  function doubleTap(item) {
+    return Gesture.Tap()
+      .numberOfTaps(2)
+      .onEnd((_event, success) => {
+        if (success) {
+          handleComplete(item);
+        }
+      });
+  }
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <View style={styles.container}>
@@ -124,52 +93,48 @@ export default function App() {
               data={todos}
               keyExtractor={(item, index) => index}
               renderItem={({ item }) => (
-                // <Swipeable
-                //   renderRightActions={(progress, dragX) =>
-                //     renderRightActions(progress, dragX, item)
-                //   }
-                //   renderLeftActions={(progress, dragX) =>
-                //     renderLeftActions(progress, dragX, item)
-                //   }
-                // >
-                  <Pressable
-                    style={styles.todoItem}
-                    onPress={() => handleComplete(item)}
-                  >
-                    <Text
-                      style={
-                        item.isComplete && {
-                          color: "green",
-                          textDecorationLine: "line-through",
+                <View>
+                  <GestureDetector gesture={doubleTap(item)}>
+                    <View style={styles.todoItem}>
+                      <Text
+                        style={
+                          item.isComplete && {
+                            color: "green",
+                            textDecorationLine: "line-through",
+                          }
                         }
-                      }
-                    >
-                      {item.text}
-                    </Text>
+                      >
+                        {item.text}
+                      </Text>
 
-                    <View style={styles.actionButtons}>
-                      {!item.isComplete && (
+                      <View style={styles.actionButtons}>
+                        {!item.isComplete && (
+                          <TouchableOpacity
+                            onPress={() => editTodo(item.id, item.text)}
+                            style={styles.iconContainer}
+                          >
+                            <Icon
+                              name="create-outline"
+                              size={20}
+                              color="#4CAF50"
+                            />
+                          </TouchableOpacity>
+                        )}
+
                         <TouchableOpacity
-                          onPress={() => editTodo(item.id, item.text)}
+                          onPress={() => deleteTodo(item.id)}
                           style={styles.iconContainer}
                         >
                           <Icon
-                            name="create-outline"
+                            name="trash-outline"
                             size={20}
-                            color="#4CAF50"
+                            color="#FF0000"
                           />
                         </TouchableOpacity>
-                      )}
-
-                      <TouchableOpacity
-                        onPress={() => deleteTodo(item.id)}
-                        style={styles.iconContainer}
-                      >
-                        <Icon name="trash-outline" size={20} color="#FF0000" />
-                      </TouchableOpacity>
+                      </View>
                     </View>
-                  </Pressable>
-                // </Swipeable>
+                  </GestureDetector>
+                </View>
               )}
             />
           </View>
